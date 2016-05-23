@@ -7,80 +7,59 @@
     <x>0</x>
     <y>0</y>
     <width>700</width>
-    <height>500</height>
+    <height>548</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QLineEdit" name="controlDeviceLineEdit">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>181</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>/dev/ttyACM0</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="connectButton">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>10</y>
-      <width>99</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Connect</string>
-    </property>
-   </widget>
-   <widget class="QWidget" name="widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>40</y>
-      <width>541</width>
-      <height>391</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QGraphicsView" name="graphicsView"/>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QPushButton" name="startButton">
-    <property name="geometry">
-     <rect>
-      <x>560</x>
-      <y>40</y>
-      <width>99</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>START</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="stopButton">
-    <property name="geometry">
-     <rect>
-      <x>560</x>
-      <y>70</y>
-      <width>99</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>STOP</string>
-    </property>
-   </widget>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLineEdit" name="controlDeviceLineEdit">
+        <property name="text">
+         <string>/dev/ttyACM0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="connectButton">
+        <property name="text">
+         <string>Connect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="startButton">
+        <property name="text">
+         <string>START</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="stopButton">
+        <property name="text">
+         <string>STOP</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QWidget" name="widget" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QGraphicsView" name="thrustGraphicsView"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

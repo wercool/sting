@@ -24,3 +24,5 @@ HEADERS  += mainwindow.h \
             serial/include/serial/v8stdint.h \
 
 FORMS    += mainwindow.ui
+
+CONFIG += c++11

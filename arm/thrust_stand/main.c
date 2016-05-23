@@ -333,9 +333,6 @@ static void DeviceInit(void)
  */
 int main(void)
 {
-    watchdogReset();
-
-    unsigned char WDINTENTIONALRESET = 0;
 
     struct cdcMessage cdcMessageObj;
 
@@ -344,14 +341,8 @@ int main(void)
 
     DeviceInit();
 
-    watchdogReset();
-
     while (1)
     {
-        if (WDINTENTIONALRESET == 0)
-        {
-            watchdogReset();
-        }
 
         cdcMessageObj = getCDCMEssage();
         if (cdcMessageObj.length > 0)
@@ -383,9 +374,9 @@ int main(void)
         if (forceReadings)
         {
             forceReading = getValueChannel6();
-            sprintf((char *)msg,"T: %u\n", forceReading);
+            sprintf((char *)msg,"T:%u\n", forceReading);
             pCDC.Write(&pCDC, (char *)msg, strlen((char *)msg));
-            delay_us(10);
+            delay_ms(1);
         }
     }
 

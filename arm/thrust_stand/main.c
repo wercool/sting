@@ -339,6 +339,10 @@ int main(void)
     unsigned int forceReadings = 0;
     unsigned int forceReading = 0;
 
+    unsigned int forceThreshold = 400;
+    unsigned int beepCnt = 0;
+    unsigned int beepPhase = 0;
+
     DeviceInit();
 
     while (1)
@@ -373,9 +377,50 @@ int main(void)
 
         if (forceReadings)
         {
+	    beepCnt++;
             forceReading = getValueChannel6();
             sprintf((char *)msg,"T:%u\n", forceReading);
             pCDC.Write(&pCDC, (char *)msg, strlen((char *)msg));
+            if ((beepCnt > (800 - forceReading)) && forceReading > forceThreshold)
+            {
+                if (beepPhase)
+                {
+                    AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                    beepPhase = 0;
+                }
+                else
+                {
+                    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                    beepPhase = 1;
+                }
+		beepCnt = 0;
+            }
+            else
+            {
+                beepCnt++;
+            }
+            delay_ms(1);
+        }
+        else
+        {
+            if (beepCnt > 1000)
+            {
+                if (beepPhase)
+                {
+                    AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                    beepPhase = 0;
+                }
+                else
+                {
+                    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                    beepPhase = 1;
+                }
+		beepCnt = 0;
+            }
+            else
+            {
+                beepCnt++;
+            }
             delay_ms(1);
         }
     }

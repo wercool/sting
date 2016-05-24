@@ -24,6 +24,7 @@ public:
     QGraphicsScene *thrustGraphicsViewScene;
     QTimer *drawTimer;
     std::vector<int> thrust;
+    float _x;
     ~MainWindow();
 
 public slots:

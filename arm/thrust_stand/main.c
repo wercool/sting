@@ -329,7 +329,13 @@ static void DeviceInit(void)
     // Initialize USB device
     AT91FUSBOpen();
     // Wait for the end of enumeration
-    while (!pCDC.IsConfigured(&pCDC));
+    int cnt = 0;
+    while (!pCDC.IsConfigured(&pCDC))
+    {
+        cnt++;
+        if (cnt > 1000)
+            break;
+    }
 
     InitPIO();
     InitADC();

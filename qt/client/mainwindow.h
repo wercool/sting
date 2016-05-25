@@ -25,6 +25,7 @@ public:
     QTimer *drawTimer;
     std::vector<int> thrust;
     float _x;
+    float dx;
     bool testMode;
     ~MainWindow();
 
@@ -41,6 +42,8 @@ private slots:
 
     void on_loadFromFileButton_clicked();
     void resizeEvent(QResizeEvent* event);
+
+    void on_horizontalSlider_valueChanged(int value);
 
 private:
     Ui::MainWindow *ui;

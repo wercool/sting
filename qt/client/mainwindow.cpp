@@ -6,6 +6,7 @@
 
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QMouseEvent>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -13,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     scanning = false;
     thrust    = {};
     _x = 0;
+    dx = 0.5;
     thrustGraphicsViewScene = new QGraphicsScene;
     drawTimer = new QTimer(this);
     connect(drawTimer, SIGNAL(timeout()), this, SLOT(drawGraph()));
@@ -73,7 +75,7 @@ void MainWindow::on_stopButton_clicked()
 void MainWindow::drawGraph()
 {
     thrustGraphicsViewScene->clear();
-    thrustGraphicsViewScene->setSceneRect(0, 0, thrust.size(), ui->thrustGraphicsView->height() - 10);
+    thrustGraphicsViewScene->setSceneRect(0, 0, ((double)thrust.size() / 2) / (0.5 / dx), ui->thrustGraphicsView->height() - 10);
     ui->thrustGraphicsView->setScene(thrustGraphicsViewScene);
     float shift = ui->thrustGraphicsView->height() - 10;
     float _x = 0;
@@ -81,7 +83,6 @@ void MainWindow::drawGraph()
     for(auto const& val: thrust)
     {
         float _val = (float)val;
-        float dx = 0.5;
         float dy = (_val / 1023) * (ui->thrustGraphicsView->height() - 20);
         thrustGraphicsViewScene->addLine(_x, _y, (_x + dx), shift - dy);
         _x += dx;
@@ -89,7 +90,7 @@ void MainWindow::drawGraph()
     }
     if (testMode)
     {
-        if (thrust.size() > ui->thrustGraphicsView->width())
+        if (thrust.size() > (unsigned int)ui->thrustGraphicsView->width())
         {
             thrust.clear();
         }
@@ -146,5 +147,11 @@ void MainWindow::on_loadFromFileButton_clicked()
 void MainWindow::MainWindow::resizeEvent(QResizeEvent *event)
 {
     (void)event;
+    drawGraph();
+}
+
+void MainWindow::on_horizontalSlider_valueChanged(int value)
+{
+    dx = 1 / (double)value;
     drawGraph();
 }

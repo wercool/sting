@@ -76,7 +76,7 @@ void MainWindow::drawGraph()
     {
         float _val = (float)val;
         float dx = 0.5;
-        float dy = (_val / 1023) * 900;
+        float dy = (_val / 1023) * 1100;
         thrustGraphicsViewScene->addLine(_x, _y, (_x + dx), shift - dy);
         _x += dx;
         _y = shift - dy;

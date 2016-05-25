@@ -1,7 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <iostream>     // std::cin, std::cout
+#include <fstream>      // std::ifstream
+
 #include <QMessageBox>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -67,7 +71,7 @@ void MainWindow::on_stopButton_clicked()
 void MainWindow::drawGraph()
 {
     thrustGraphicsViewScene->clear();
-    thrustGraphicsViewScene->setSceneRect(0, 0, ui->thrustGraphicsView->width() - 10, ui->thrustGraphicsView->height() - 10);
+    thrustGraphicsViewScene->setSceneRect(0, 0, thrust.size(), ui->thrustGraphicsView->height() - 10);
     ui->thrustGraphicsView->setScene(thrustGraphicsViewScene);
     float shift = ui->thrustGraphicsView->height() - 10;
     float _x = 0;
@@ -76,7 +80,7 @@ void MainWindow::drawGraph()
     {
         float _val = (float)val;
         float dx = 0.5;
-        float dy = (_val / 1023) * 1100;
+        float dy = (_val / 1023) * (ui->thrustGraphicsView->height() - 20);
         thrustGraphicsViewScene->addLine(_x, _y, (_x + dx), shift - dy);
         _x += dx;
         _y = shift - dy;
@@ -94,13 +98,43 @@ void MainWindow::readForce()
             std::string value_str = response.substr(value_str_pos);
             int value = atoi(value_str.c_str());
             qDebug("%d", value);
-//            thrust.push_back(value);
-
-            if (value > 400)
-            {
-                thrust.push_back(value);
-            }
+            thrust.push_back(value);
         }
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
+}
+
+void MainWindow::on_loadFromFileButton_clicked()
+{
+    QFileDialog dialog(this);
+    if (dialog.exec())
+    {
+        thrust.clear();
+        QStringList fileNames = dialog.selectedFiles();
+        QString fileName = fileNames.at(0);
+        qDebug("%s", fileName.toStdString().c_str());
+
+        std::ifstream inputStream(fileName.toStdString());
+        std::string line;
+        while (getline(inputStream, line, '\n'))
+        {
+            if (line.length() == 4)
+            {
+                int value = std::atoi(line.c_str());
+                qDebug("%d", value);
+                if (value > 400)
+                {
+                    thrust.push_back(value);
+                }
+            }
+        }
+        inputStream.close();
+        drawGraph();
+    }
+}
+
+void MainWindow::MainWindow::resizeEvent(QResizeEvent *event)
+{
+    (void)event;
+    drawGraph();
 }

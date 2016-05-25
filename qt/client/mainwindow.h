@@ -38,6 +38,9 @@ public slots:
 
 private slots:
 
+    void on_loadFromFileButton_clicked();
+    void resizeEvent(QResizeEvent* event);
+
 private:
     Ui::MainWindow *ui;
     void readForce();

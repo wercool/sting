@@ -1,0 +1,1 @@
+sudo dd if=/dev/sdc of=~/Desktop/sdc.raw bs=500000 count=1

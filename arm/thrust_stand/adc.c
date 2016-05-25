@@ -25,8 +25,8 @@ void InitADC(void)
     a_pADC->ADC_MR = 0x0F1F0F00;
 
     // enable all needed channels
-    a_pADC->ADC_CHER = AT91C_ADC_CH0;
-    a_pADC->ADC_CHER = AT91C_ADC_CH1;
+    //a_pADC->ADC_CHER = AT91C_ADC_CH0;
+    //a_pADC->ADC_CHER = AT91C_ADC_CH1;
     //a_pADC->ADC_CHER = AT91C_ADC_CH2;
     a_pADC->ADC_CHER = AT91C_ADC_CH4;
     a_pADC->ADC_CHER = AT91C_ADC_CH5;

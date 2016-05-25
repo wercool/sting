@@ -16,6 +16,8 @@
 
 #include "thresholds.h"
 
+#include "mmc.h"
+
 #define FIQ_INTERRUPT_LEVEL     0
 #define TIMER0_INTERRUPT_LEVEL  1
 
@@ -271,6 +273,14 @@ static void InitPIO(void)
 
     // disable all pull-ups
     AT91C_BASE_PIOA->PIO_PPUDR = ~0;
+
+    AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, AT91C_PIO_PA18);   //Green LED
+    AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA18);
+
+    AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, AT91C_PIO_PA17);   //Yellow LED
+    AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA17);
+
+    AT91F_PIO_CfgInput(AT91C_BASE_PIOA, AT91C_PIO_PA20);    // B2
 }
 
 static void InitIRQ()
@@ -333,9 +343,15 @@ static void DeviceInit(void)
  */
 int main(void)
 {
+    //MAIN POINTER
+    AT91PS_PIO    m_pPio   = AT91C_BASE_PIOA;
+
+    // external buffer which is use to read/write in MMC card
+    extern char mmc_buffer[512];
 
     struct cdcMessage cdcMessageObj;
 
+    unsigned int forceReadingsTest = 0;
     unsigned int forceReadings = 0;
     unsigned int forceReading = 0;
 
@@ -344,6 +360,49 @@ int main(void)
     unsigned int beepPhase = 0;
 
     DeviceInit();
+
+    Init_CP_WP();
+
+    //chek for CP and WP
+    //CP - card present
+    while(((m_pPio->PIO_PDSR) & BIT15)) { /*put your card present event here*/  }
+    //WP - write protect
+    while(((m_pPio->PIO_PDSR) & BIT16)) { /*put your write protect event here*/ }
+
+    /**** MMC CARD ****/
+    if (initMMC() == MMC_SUCCESS)	// card found
+    {
+
+/*
+        memset(&mmc_buffer,'0',512);    //set breakpoint and trace mmc_buffer contents
+        mmcWriteBlock(0);
+        memset(&mmc_buffer,'0',512);
+        mmcWriteBlock(512);
+        memset(&mmc_buffer,'0',512);
+        mmcWriteBlock(1024);
+*/
+/*
+        // Read first Block back to buffer
+        memset(&mmc_buffer,0x00,512);
+        mmcReadBlock(0,512);
+
+        // Read first Block back to buffer
+        memset(&mmc_buffer,0x00,512);
+        mmcReadBlock(512,512);
+*/
+    }
+
+    int bufferIdx = 0;
+    int blockIdx = 0;
+
+    for (int j = 0; j < 100; j++)
+    {
+        memset(&mmc_buffer,'0',512);
+        mmcWriteBlock(blockIdx);
+        blockIdx += 512;
+    }
+
+    blockIdx = 0;
 
     while (1)
     {
@@ -365,57 +424,107 @@ int main(void)
             }
             if (strcmp((char*) cmdParts, "START") == 0)
             {
-		forceReadings = 1;
+		        forceReadingsTest = 1;
                 continue;
             }
             if (strcmp((char*) cmdParts, "STOP") == 0)
             {
-		forceReadings = 0;
+		        forceReadingsTest = 0;
                 continue;
             }
         }
 
-        if (forceReadings)
+        if (!AT91F_PIO_IsInputSet(AT91C_BASE_PIOA, AT91C_PIO_PA20))
         {
-	    beepCnt++;
-            forceReading = getValueChannel6();
-            sprintf((char *)msg,"T:%u\n", forceReading);
-            pCDC.Write(&pCDC, (char *)msg, strlen((char *)msg));
-            if ((beepCnt > (800 - forceReading)) && forceReading > forceThreshold)
+            if (!forceReadings)
             {
-                if (beepPhase)
-                {
-                    AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
-                    beepPhase = 0;
-                }
-                else
-                {
-                    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
-                    beepPhase = 1;
-                }
-		beepCnt = 0;
+                AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA17);
+                bufferIdx = 0;
+                blockIdx = 0;
+                memset(&mmc_buffer,'0',512);
+                forceReadings = 1;
             }
             else
             {
-                beepCnt++;
+                forceReadings = 0;
+                while (bufferIdx < 511)
+                {
+                    mmc_buffer[bufferIdx++] = '0';
+                }
+                mmcWriteBlock(blockIdx);
+                bufferIdx = 0;
+                blockIdx  = 0;
+                memset(&mmc_buffer,'0',512);
+            }
+            delay_ms(500);
+        }
+
+        if (forceReadings)
+        {
+	        beepCnt++;
+            forceReading = getValueChannel6();
+            if (forceReadingsTest)
+            {
+                sprintf((char *)msg,"T:%04u\n", forceReading);
+                pCDC.Write(&pCDC, (char *)msg, strlen((char *)msg));
+            }
+            if (forceReading > forceThreshold)
+            {
+                char buff[4];
+                sprintf((char *)buff,"%04u\n", forceReading);
+                for (int j = 0; j < 5; j++)
+                {
+                    mmc_buffer[bufferIdx++] = buff[j];
+                    if (bufferIdx == 512)
+                    {
+                        mmcWriteBlock(blockIdx);
+                        bufferIdx = 0;
+                        blockIdx += 512;
+                        memset(&mmc_buffer,'0',512);
+                    }
+                }
+                if ((beepCnt > (800 - forceReading)))
+                {
+                    if (beepPhase)
+                    {
+                        AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                        AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA18);
+                        beepPhase = 0;
+                    }
+                    else
+                    {
+                        AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                        AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA18);
+                        beepPhase = 1;
+                    }
+		            beepCnt = 0;
+                }
+                else
+                {
+                    beepCnt++;
+                }
             }
             delay_ms(1);
         }
         else
         {
-            if (beepCnt > 1000)
+            if (beepCnt > 400)
             {
                 if (beepPhase)
                 {
                     AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA18);
+                    AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA17);
                     beepPhase = 0;
                 }
                 else
                 {
                     AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, AT91C_PIO_PA8);
+                    AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA18);
+                    AT91F_PIO_SetOutput(AT91C_BASE_PIOA, AT91C_PIO_PA17);
                     beepPhase = 1;
                 }
-		beepCnt = 0;
+                beepCnt = 0;
             }
             else
             {

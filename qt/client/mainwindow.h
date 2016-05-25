@@ -25,6 +25,7 @@ public:
     QTimer *drawTimer;
     std::vector<int> thrust;
     float _x;
+    bool testMode;
     ~MainWindow();
 
 public slots:

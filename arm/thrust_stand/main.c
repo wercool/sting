@@ -461,28 +461,30 @@ int main(void)
 
         if (forceReadings)
         {
-	        beepCnt++;
+            beepCnt++;
             forceReading = getValueChannel6();
             if (forceReadingsTest)
             {
                 sprintf((char *)msg,"T:%04u\n", forceReading);
                 pCDC.Write(&pCDC, (char *)msg, strlen((char *)msg));
             }
+
+            char buff[4];
+            sprintf((char *)buff,"%04u\n", forceReading);
+            for (int j = 0; j < 5; j++)
+            {
+                mmc_buffer[bufferIdx++] = buff[j];
+                if (bufferIdx == 512)
+                {
+	            mmcWriteBlock(blockIdx);
+	            bufferIdx = 0;
+	            blockIdx += 512;
+	            memset(&mmc_buffer,'0',512);
+                }
+            }
+
             if (forceReading > forceThreshold)
             {
-                char buff[4];
-                sprintf((char *)buff,"%04u\n", forceReading);
-                for (int j = 0; j < 5; j++)
-                {
-                    mmc_buffer[bufferIdx++] = buff[j];
-                    if (bufferIdx == 512)
-                    {
-                        mmcWriteBlock(blockIdx);
-                        bufferIdx = 0;
-                        blockIdx += 512;
-                        memset(&mmc_buffer,'0',512);
-                    }
-                }
                 if ((beepCnt > (800 - forceReading)))
                 {
                     if (beepPhase)

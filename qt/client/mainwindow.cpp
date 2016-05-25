@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     thrustGraphicsViewScene = new QGraphicsScene;
     drawTimer = new QTimer(this);
     connect(drawTimer, SIGNAL(timeout()), this, SLOT(drawGraph()));
+    testMode = true;
 }
 
 MainWindow::~MainWindow()
@@ -50,6 +51,7 @@ void MainWindow::on_connectButton_clicked()
 
 void MainWindow::on_startButton_clicked()
 {
+    testMode = true;
     scanning = true;
     thrustGraphicsViewScene->setSceneRect(0, 0, ui->thrustGraphicsView->width() - 10, ui->thrustGraphicsView->height() - 10);
     ui->thrustGraphicsView->setScene(thrustGraphicsViewScene);
@@ -85,6 +87,13 @@ void MainWindow::drawGraph()
         _x += dx;
         _y = shift - dy;
     }
+    if (testMode)
+    {
+        if (thrust.size() > ui->thrustGraphicsView->width())
+        {
+            thrust.clear();
+        }
+    }
 }
 
 void MainWindow::readForce()
@@ -109,6 +118,7 @@ void MainWindow::on_loadFromFileButton_clicked()
     QFileDialog dialog(this);
     if (dialog.exec())
     {
+        testMode = false;
         thrust.clear();
         QStringList fileNames = dialog.selectedFiles();
         QString fileName = fileNames.at(0);
@@ -122,7 +132,7 @@ void MainWindow::on_loadFromFileButton_clicked()
             {
                 int value = std::atoi(line.c_str());
                 qDebug("%d", value);
-                if (value > 400)
+                if (value > 150)
                 {
                     thrust.push_back(value);
                 }

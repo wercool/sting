@@ -7,6 +7,10 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QMouseEvent>
+#include <QBrush>
+
+MainWindow* MainWindow::pMainWindow = NULL;
+bool MainWindow::instanceFlag = false;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -19,6 +23,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     drawTimer = new QTimer(this);
     connect(drawTimer, SIGNAL(timeout()), this, SLOT(drawGraph()));
     testMode = true;
+
+    drawGraph();
+}
+
+MainWindow *MainWindow::getInstance()
+{
+    if(!instanceFlag)
+    {
+        pMainWindow = new MainWindow();
+        instanceFlag = true;
+        return pMainWindow;
+    }
+    else
+    {
+        return pMainWindow;
+    }
 }
 
 MainWindow::~MainWindow()
@@ -76,7 +96,74 @@ void MainWindow::drawGraph()
 {
     thrustGraphicsViewScene->clear();
     thrustGraphicsViewScene->setSceneRect(0, 0, ((double)thrust.size() / 2) / (0.5 / dx), ui->thrustGraphicsView->height() - 10);
+
+    timeLineStart = new TimeLine();
+    thrustGraphicsViewScene->addItem(timeLineStart);
+
+    timeLineEnd = new TimeLine();
+    thrustGraphicsViewScene->addItem(timeLineEnd);
+
     ui->thrustGraphicsView->setScene(thrustGraphicsViewScene);
+
+    timeLineStart->setPen(QPen(Qt::darkGreen, 1.0, Qt::DashLine));
+    timeLineStart->setLine(100, 0, 100, ui->thrustGraphicsView->height());
+
+    timeLineEnd->setPen(QPen(Qt::darkRed, 1.0, Qt::DashLine));
+    timeLineEnd->setLine(200, 0, 200, ui->thrustGraphicsView->height());
+
+    QBrush brush;
+    timeLineStartHandler = new TimeLineHandler(timeLineStart);
+    timeLineStartHandler->start = true;
+    timeLineStartHandler->setRect(0, 0, 12, 12);
+    timeLineStartHandler->setPos(94, ui->thrustGraphicsView->height() / 2 - 6);
+    brush = timeLineStartHandler->brush();
+    brush.setStyle(Qt::SolidPattern);
+    brush.setColor(Qt::green);
+    timeLineStartHandler->setBrush(brush);
+    thrustGraphicsViewScene->addItem(timeLineStartHandler);
+
+    timeLineEndHandler = new TimeLineHandler(timeLineEnd);
+    timeLineEndHandler->start = false;
+    timeLineEndHandler->setRect(0, 0, 12, 12);
+    timeLineEndHandler->setPos(194, ui->thrustGraphicsView->height() / 2 - 6);
+    brush = timeLineStartHandler->brush();
+    brush.setStyle(Qt::SolidPattern);
+    brush.setColor(Qt::red);
+    timeLineEndHandler->setBrush(brush);
+    thrustGraphicsViewScene->addItem(timeLineEndHandler);
+
+    timeLineStartText = new QGraphicsTextItem;
+    timeLineStartText->setPlainText(".....");
+    timeLineStartText->setPos(timeLineStartHandler->pos().x() + 12, timeLineStartHandler->pos().y() - 20);
+    thrustGraphicsViewScene->addItem(timeLineStartText);
+
+    timeLineEndText   = new QGraphicsTextItem;
+    timeLineEndText->setPlainText(".....");
+    timeLineEndText->setPos(timeLineEndHandler->pos().x() + 12, timeLineEndHandler->pos().y() - 20);
+    thrustGraphicsViewScene->addItem(timeLineEndText);
+
+
+
+    forceLine = new QGraphicsLineItem;
+    forceLine->setPen(QPen(Qt::darkBlue, 1.0, Qt::DashLine));
+    forceLine->setLine(0, ui->thrustGraphicsView->height() / 2, ui->thrustGraphicsView->width(), ui->thrustGraphicsView->height() / 2);
+    thrustGraphicsViewScene->addItem(forceLine);
+
+    forceLineHandler = new ForceLineHandler(forceLine);
+    forceLineHandler->setRect(0, 0, 12, 12);
+    forceLineHandler->setPos(50, ui->thrustGraphicsView->height() / 2 - 6);
+    brush = forceLineHandler->brush();
+    brush.setStyle(Qt::SolidPattern);
+    brush.setColor(Qt::blue);
+    forceLineHandler->setBrush(brush);
+    thrustGraphicsViewScene->addItem(forceLineHandler);
+
+    forceLineText   = new QGraphicsTextItem;
+    forceLineText->setPlainText(".....");
+    forceLineText->setPos(forceLineHandler->pos().x(), forceLineHandler->pos().y() - 20);
+    thrustGraphicsViewScene->addItem(forceLineText);
+
+
     float shift = ui->thrustGraphicsView->height() - 10;
     float _x = 0;
     float _y = ui->thrustGraphicsView->height() - 10;
@@ -133,10 +220,7 @@ void MainWindow::on_loadFromFileButton_clicked()
             {
                 int value = std::atoi(line.c_str());
                 qDebug("%d", value);
-                if (value > 150)
-                {
-                    thrust.push_back(value);
-                }
+                thrust.push_back(value);
             }
         }
         inputStream.close();

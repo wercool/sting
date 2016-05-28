@@ -214,13 +214,17 @@ void MainWindow::on_loadFromFileButton_clicked()
 
         std::ifstream inputStream(fileName.toStdString());
         std::string line;
+        int i = 0;
         while (getline(inputStream, line, '\n'))
         {
-            if (line.length() == 4)
+            if (i++ > 28500 && i < 32000)
             {
-                int value = std::atoi(line.c_str());
-                qDebug("%d", value);
-                thrust.push_back(value);
+                if (line.length() == 4)
+                {
+                    int value = std::atoi(line.c_str());
+                    qDebug("%d", value);
+                    thrust.push_back(value);
+                }
             }
         }
         inputStream.close();

@@ -1,2 +1,1 @@
-https://code.google.com/archive/p/easycap-somagic-linux/wikis/GettingStarted.wiki
-somagic-capture --ntsc-4.43-50 --sync=1 --iso-transfers 20 -B 149 -C 72 --luminance 2 --lum-aperture 3 | ffmpeg -f rawvideo -pix_fmt uyvy422 -vtag 2vuy -s 720x480 -y -an -r ntsc -i - -f alsa -i hw:0,0 -aspect 1.77 -b:v 2200k output.avi
+Experimental rocket
